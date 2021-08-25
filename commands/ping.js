@@ -10,5 +10,25 @@ module.exports = {
 	// execute field (function associated to command)
 	async execute(interaction) {
 		await interaction.reply("Pong!");
+		// `m` is a message object that will be passed through the filter function
+		const filter = (reaction, user) => {
+			return true;
+		};
+
+		const message = await interaction.fetchReply();
+
+		message.react("😀");
+
+		const collector = await message.createReactionCollector({ filter, time: 60000 });
+
+		collector.on("collect", (reaction, user) => {
+			console.log(`Collected ${reaction.emoji.name} from ${user.tag}`);
+		});
+
+		collector.on("end", collected => {
+			console.log(`Collected ${collected.size} items`);
+		});
+
+		message.react("😂");
 	},
 };
