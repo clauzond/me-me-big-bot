@@ -22,7 +22,7 @@ module.exports = {
 		await interaction.reply("I am currently testing this !");
 		const message = await interaction.fetchReply();
 		const numbersEmoji = ["0⃣", "1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣"];
-		
+
 		await message.react("👍");
 		await message.react("👎");
 
@@ -30,17 +30,18 @@ module.exports = {
 		redUser = interaction.options.getUser("user");
 
 		const filter = (reaction, user) => {
-			console.log(reaction, user);
+			console.log("filtering");
 			return (["👍", "👎"].includes(reaction.emoji.name) || (user.id === getPlayerId()));
 		};
 
-		message.awaitReactions({ filter, max: 1, time: 10000, errors: ["time"] })
+		message.awaitReactions({ filter, max: 2, time: 10000, errors: ["time"] })
 			.then(collected => {
-				const reaction = collected.first();
-				console.log(reaction);
+				console.log("collect");
 			}).catch(collected => {
-				console.log("nope");
+				console.log("nope !");
 				return;
 			});
+
+		message.react("😀");
 	},
 };
