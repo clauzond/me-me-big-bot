@@ -4,7 +4,8 @@ const { Client, Collection, Intents } = require("discord.js");
 const { token, allowedChannels, allowedGuilds } = require("./config.json");
 
 // Create a new client instance
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+// list of intents: https://discord.com/developers/docs/topics/gateway#gateway-intents
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
 
 // Get commands (which are registered by deploy-commands.js)
 client.commands = new Collection();
@@ -52,7 +53,6 @@ client.on("interactionCreate", async interaction => {
 	}
 
 });
-
 
 // Login to Discord with your client's token
 client.login(token);
