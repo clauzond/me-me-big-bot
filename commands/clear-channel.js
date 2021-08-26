@@ -23,16 +23,17 @@ module.exports = {
 		let messageNumber = interaction.options.getInteger("number");
 		if (!userToDelete || userToDelete.bot) messageNumber++;
 		if (messageNumber < 1) {
-			await interaction.reply({ content: "You have to enter a number greater than 0 !", ephemeral: true });
-			return;
+			messageNumber = 1;
+		} else if (messageNumber > 100) {
+			messageNumber = 100;
 		}
 
 		let replyString;
-		const s = (interaction.options.getInteger("number") > 1) ? "s" : "";
+		const s = (messageNumber > 1) ? "s" : "";
 		if (userToDelete) {
-			replyString = `Are you sure you want to delete ${interaction.options.getInteger("number")} message${s} from ${userToDelete} in this channel ?`;
+			replyString = `Are you sure you want to delete ${messageNumber} message${s} from ${userToDelete} in this channel ?`;
 		} else {
-			replyString = `Are you sure you want to delete ${interaction.options.getInteger("number")} message${s} in this channel ?`;
+			replyString = `Are you sure you want to delete ${messageNumber} message${s} in this channel ?`;
 		}
 		await interaction.reply(replyString);
 		const message = await interaction.fetchReply();
@@ -51,8 +52,8 @@ module.exports = {
 			if (user.bot) return;
 
 			// remove the reaction
-			reaction.users.remove(user.id);
-
+			await reaction.users.remove(user.id).catch(error => {return;});
+			
 			if (user.id != zahxId) return;
 
 			if (reaction.emoji.name == "❎") collector.stop();
@@ -60,34 +61,34 @@ module.exports = {
 			if (reaction.emoji.name != "✅") return;
 
 			await until(_ => botFinished == true);
-			await message.edit("Goodbye Mr.Freeman");
+			await message.edit("Goodbye Mr.Freeman").catch(error => {return;});
 			if (!userToDelete) {
-				await interaction.channel.bulkDelete(messageNumber);
+				await interaction.channel.bulkDelete(messageNumber).catch(error => {return;});
 				cleared = true;
 				collector.stop();
 			} else {
 				interaction.channel.messages.fetch({
 					limit: 100,
 				}).then(async (messages) => {
-					const filterBy = userToDelete.id;
-					messages = messages.filter(m => m.author.id === filterBy).firstKey(messageNumber);
-					await interaction.channel.bulkDelete(messages);
-					if (userToDelete.bot) {
-						cleared = true;
-					}
+					messages = messages.filter(m => m.author.id === userToDelete.id);
+					messages = messages.firstKey(Math.min(messageNumber, messages.size + (userToDelete.bot) * 1));
+					await interaction.channel.bulkDelete(messages).catch(error => {return;});
+					cleared = userToDelete.bot;
 					collector.stop();
 				});
 			}
 		});
 
-		collector.on("end", async collected => {
+		collector.on("end", collected => {
 			if (!cleared) {
 				message.delete();
 			}
 		});
 
-		await message.react("✅");
-		await message.react("❎");
-		setTimeout(() => {botFinished = true;}, 100);
+		try {
+			await message.react("✅");
+			await message.react("❎");
+			setTimeout(() => {botFinished = true;}, 100);
+		} catch (error) {}
 	},
 };

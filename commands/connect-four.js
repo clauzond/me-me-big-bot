@@ -17,12 +17,14 @@ let timePerTurn = 20;
 
 const clockLoop = async (message, displayFunction) => {
 	if (!gameInProgress || readyCheckFinished) return;
-	timer += 1;
-	const t = Date.now();
-	await message.edit(displayFunction());
-	const dt = Date.now() - t;
-	timer += dt / 1000;
-	setTimeout(() => clockLoop(message, displayFunction), 1000);
+	try {
+		timer += 1;
+		const t = Date.now();
+		await message.edit(displayFunction());
+		const dt = Date.now() - t;
+		timer += dt / 1000;
+		setTimeout(() => clockLoop(message, displayFunction), 1000);
+	} catch (error) {}
 };
 
 const getTimerString = (writeTime) => {
@@ -91,7 +93,7 @@ const readyCheck = async (message) => {
 		if (user.bot) return;
 
 		// remove the reaction
-		reaction.users.remove(user.id);
+		await reaction.users.remove(user.id).catch(error => {return;});
 
 		// quit ready check
 		if (reaction.emoji.name == "❎") {
@@ -116,18 +118,21 @@ const readyCheck = async (message) => {
 			rightEmoji = reaction.emoji.name;
 		}
 
-		message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true));
+		await message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true)).catch(error => {return;});
 
 		if (leftReady && rightReady) collector.stop();
 	});
 	collector.on("end", collection => {
 		readyCheckFinished = true;
 	});
-	await message.react("🟡");
-	await message.react("🔴");
-	await message.react("❎");
 
-	await until(_ => readyCheckFinished == true);
+	try {
+		await message.react("🟡");
+		await message.react("🔴");
+		await message.react("❎");
+		await until(_ => readyCheckFinished == true);
+	} catch (error) {}
+
 	return (leftReady && rightReady);
 };
 
@@ -141,6 +146,9 @@ module.exports = {
 		.setDescription("Challenge someone's honor in a connect four battle 🔴🟡")
 		.addUserOption(option => option.setName("user")
 			.setDescription("The person you shall beat")
+			.setRequired(true))
+		.addIntegerOption(option => option.setName("time")
+			.setDescription("Time per turn")
 			.setRequired(true)),
 	// execute field (function associated to command)
 	async execute(interaction) {
@@ -160,26 +168,26 @@ module.exports = {
 		leftEmoji = "⚫", rightEmoji = "⚫";
 		leftColor = "", rightColor = "";
 
-		await interaction.reply(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true));
-		const message = await interaction.fetchReply();
+		await interaction.reply(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true)).catch(error => {return;});
+		const message = await interaction.fetchReply().catch(error => {return;});
 
 		// ready check
 		clockLoop(message, () => { return getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true); });
 		const playersReady = await readyCheck(message);
-		await message.reactions.removeAll();
+		await message.reactions.removeAll().catch(error => {return;});
 		if (!playersReady) {
-			message.delete();
+			await message.delete().catch(error => {return;});
 			gameInProgress = false;
 			return;
 		}
 
 
 		// start game
-		timePerTurn = 20;
+		timePerTurn = interaction.options.getInteger("time");
 		readyCheckFinished = false;
 		newGame();
-		message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji)
-			+ `\nGame will soon start.\nEach player has ${timePerTurn} seconds per turn.\nGLHF`);
+		await message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji)
+			+ `\nGame will soon start.\nEach player has ${timePerTurn} seconds per turn.\nGLHF`).catch(error => {return;});
 
 		// collect emotes 
 		let bot_finished = false;
@@ -187,12 +195,14 @@ module.exports = {
 		const collector = message.createReactionCollector({ filter: filterNumbers, idle: timePerTurn * 1000 });
 
 		// game loop with reactions
-		collector.on("collect", (reaction, user) => {
+		collector.on("collect", async (reaction, user) => {
 			timer = 0;
 			if (user.bot) return;
 
 			// remove the reaction
-			reaction.users.remove(user.id);
+			try {
+				await reaction.users.remove(user.id);
+			} catch(error) {console.log("hhhh");}
 
 			// bot has finished placing all emotes
 			if (!bot_finished) return;
@@ -212,16 +222,18 @@ module.exports = {
 			}
 		});
 
-		collector.on("end", collected => {
-			message.reactions.removeAll();
-			message.edit(discordGameString(true, isTimeout));
-			gameInProgress = false;
+		collector.on("end", async collected => {
+			try {
+				await message.reactions.removeAll();
+				await message.edit(discordGameString(true, isTimeout));
+				gameInProgress = false;
+			} catch (error) {}
 		});
 
 		for (let i = 1; i < 8; i++) {
 			await message.react(numbersEmoji[i]);
 		}
-		await message.edit(discordGameString());
+		await message.edit(discordGameString()).catch(error => {return;});
 		bot_finished = true;
 		clockLoop(message, discordGameString);
 	},
