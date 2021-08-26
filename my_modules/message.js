@@ -1,10 +1,10 @@
 const letter_dict = {};
 
-Array.prototype.sample = function() {
+Array.prototype.sample = function () {
 	return this[Math.floor(Math.random() * this.length)];
 };
 
-String.prototype.strip_accents = function() {
+String.prototype.strip_accents = function () {
 	return this.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 };
 
@@ -56,7 +56,7 @@ function create_letter_dict() {
 	return letter_dict;
 }
 
-function message_to_emote_patterns(message) {
+function stringToEmoji(message) {
 	let emote = "";
 	let current_pattern;
 	let step;
@@ -85,6 +85,9 @@ function message_to_emote_patterns(message) {
 	return emote;
 }
 
+
 create_letter_dict();
 
-module.exports = message_to_emote_patterns;
+module.exports = {
+	stringToEmoji,
+}

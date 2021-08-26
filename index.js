@@ -1,7 +1,8 @@
 // Require the necessary discord.js classes
 const fs = require("fs");
 const { Client, Collection, Intents } = require("discord.js");
-const { token, allowedChannels, allowedGuilds } = require("./config.json");
+const { token, allowedChannels, allowedGuilds, arenaChannels, allowedArenaCommands } = require("./config.json");
+const { randomEmoji } = require("./my_modules/random-emoji.js");
 
 // Create a new client instance
 // list of intents: https://discord.com/developers/docs/topics/gateway#gateway-intents
@@ -23,7 +24,7 @@ for (const file of commandFiles) {
 // When the client is ready, run this code (only once)
 client.once("ready", c => {
 	console.log(`logged in as: ${c.user.tag}`);
-	console.log("ready to operate 🥵");
+	console.log(`ready to operate ${randomEmoji()}`);
 });
 
 
@@ -36,15 +37,22 @@ client.on("interactionCreate", async interaction => {
 	// command doesn't exist in Collection
 	if (!command) return;
 
-	console.log(`${interaction.user.tag} in #${interaction.channel.name} (${interaction.guild.name}) triggered ${interaction.commandName} 😎`);
+	console.log(`${interaction.user.tag} in #${interaction.channel.name} (${interaction.guild.name}) triggered ${interaction.commandName} ${command.emoji}`);
 
 	// command not in correct guild or not in correct channel
+	if (arenaChannels.includes(interaction.channelId) && !allowedArenaCommands.includes(interaction.commandName)) {
+		await interaction.reply({ content: "YOU SHALL NOT PASS ⚔", ephemeral: true });
+		console.log("but not in an arena ⚔");
+		return;
+	}
+
 	if (!allowedGuilds.includes(interaction.guildId) || !allowedChannels.includes(interaction.channelId)) {
 		await interaction.reply({ content: "sowwy but you are in the wrong guild or channel 😰", ephemeral: true });
 		console.log("but wrong channel or guild 😂");
 		return;
 	}
 
+	// execute commands
 	try {
 		await command.execute(interaction);
 	} catch (error) {
