@@ -52,8 +52,8 @@ const getEmojiColumn = (emojiName) => {
 	return (numbersEmoji.indexOf(emojiName) - 1);
 };
 
-const getStatusString = (left_emoji, left_user, right_user, right_emoji, writeTime = false) => {
-	return `${left_emoji}  ${left_user} vs ${right_user}  ${right_emoji}${getTimerString(writeTime)}`;
+const getStatusString = (left_emoji, left_user, right_user, right_emoji, writeTime = false, additionalString = "") => {
+	return `${left_emoji}  ${left_user} vs ${right_user}  ${right_emoji}${getTimerString(writeTime)}${additionalString}`;
 };
 
 const discordGameString = (showColors = false, timeout = false) => {
@@ -93,7 +93,7 @@ const readyCheck = async (message) => {
 		if (user.bot) return;
 
 		// remove the reaction
-		await reaction.users.remove(user.id).catch(error => {return;});
+		reaction.users.remove(user.id).catch(error => {return;});
 
 		// quit ready check
 		if (reaction.emoji.name == "❎") {
@@ -118,7 +118,7 @@ const readyCheck = async (message) => {
 			rightEmoji = reaction.emoji.name;
 		}
 
-		await message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true)).catch(error => {return;});
+		await message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true));
 
 		if (leftReady && rightReady) collector.stop();
 	});
@@ -172,56 +172,53 @@ module.exports = {
 		const message = await interaction.fetchReply().catch(error => {return;});
 
 		// ready check
-		clockLoop(message, () => { return getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true); });
-		const playersReady = await readyCheck(message);
+		clockLoop(message, () => { return getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true, `\nTime per turn: ${interaction.options.getInteger("time")}s`); });
+		const playersReady = await readyCheck(message).catch(error => {return;});
 		await message.reactions.removeAll().catch(error => {return;});
 		if (!playersReady) {
 			await message.delete().catch(error => {return;});
 			gameInProgress = false;
 			return;
 		}
-
-
+		
+		
 		// start game
 		timePerTurn = interaction.options.getInteger("time");
-		readyCheckFinished = false;
 		newGame();
 		await message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji)
-			+ `\nGame will soon start.\nEach player has ${timePerTurn} seconds per turn.\nGLHF`).catch(error => {return;});
-
+		+ `\nGame will soon start.\nEach player has ${timePerTurn} seconds per turn.\nGLHF`).catch(error => {return;});
+		
 		// collect emotes 
 		let bot_finished = false;
 		isTimeout = true;
 		const collector = message.createReactionCollector({ filter: filterNumbers, idle: timePerTurn * 1000 });
-
+		
 		// game loop with reactions
 		collector.on("collect", async (reaction, user) => {
 			timer = 0;
 			if (user.bot) return;
-
+			
 			// remove the reaction
-			try {
-				await reaction.users.remove(user.id);
-			} catch(error) {console.log("hhhh");}
-
+			await reaction.users.remove(user.id).catch(error => {return;});
+			
 			// bot has finished placing all emotes
 			if (!bot_finished) return;
-
+			
 			// emote is correct
 			if (!numbersEmoji.includes(reaction.emoji.name)) return;
-
+			
 			// user can play
 			if (user.id != getPlayer().id) return;
-
+			
 			playMove(getEmojiColumn(reaction.emoji.name));
 			timer = 0;
-
+			
 			if (getWinner()) {
 				isTimeout = false;
 				collector.stop();
 			}
 		});
-
+		
 		collector.on("end", async collected => {
 			try {
 				await message.reactions.removeAll();
@@ -229,12 +226,13 @@ module.exports = {
 				gameInProgress = false;
 			} catch (error) {}
 		});
-
+		
 		for (let i = 1; i < 8; i++) {
 			await message.react(numbersEmoji[i]);
 		}
 		await message.edit(discordGameString()).catch(error => {return;});
 		bot_finished = true;
+		readyCheckFinished = false;
 		clockLoop(message, discordGameString);
 	},
 };
