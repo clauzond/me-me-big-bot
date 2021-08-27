@@ -28,7 +28,7 @@ const clockLoop = async (message, displayFunction) => {
 };
 
 const getTimerString = (writeTime) => {
-	return (writeTime) ? `                        ${clocksEmoji[Math.floor(timer) % 4]} (${timePerTurn - Math.floor(timer)})` : "";
+	return (writeTime) ? `                          ${clocksEmoji[Math.floor(timer) % 4]} (${timePerTurn - Math.floor(timer)})` : "";
 };
 
 const getNameFromEmoji = (emoji) => {
@@ -86,7 +86,7 @@ const discordGameString = (showColors = false, timeout = false) => {
 	return gameString;
 };
 
-const readyCheck = async (message) => {
+const readyCheck = async (message, time) => {
 	let leftReady = false, rightReady = false;
 	const collector = message.createReactionCollector({ filter, idle: timePerTurn * 1000 });
 	collector.on("collect", async (reaction, user) => {
@@ -118,7 +118,7 @@ const readyCheck = async (message) => {
 			rightEmoji = reaction.emoji.name;
 		}
 
-		await message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true));
+		await message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true, `\nTime per turn: ${time}s`));
 
 		if (leftReady && rightReady) collector.stop();
 	});
@@ -173,7 +173,7 @@ module.exports = {
 
 		// ready check
 		clockLoop(message, () => { return getStatusString(leftEmoji, leftUser, rightUser, rightEmoji, true, `\nTime per turn: ${interaction.options.getInteger("time")}s`); });
-		const playersReady = await readyCheck(message).catch(error => {return;});
+		const playersReady = await readyCheck(message, interaction.options.getInteger("time")).catch(error => {return;});
 		await message.reactions.removeAll().catch(error => {return;});
 		if (!playersReady) {
 			await message.delete().catch(error => {return;});
@@ -215,15 +215,16 @@ module.exports = {
 			
 			if (getWinner()) {
 				isTimeout = false;
+				gameInProgress = false;
 				collector.stop();
 			}
 		});
 		
 		collector.on("end", async collected => {
 			try {
+				gameInProgress = false;
 				await message.reactions.removeAll();
 				await message.edit(discordGameString(true, isTimeout));
-				gameInProgress = false;
 			} catch (error) {}
 		});
 		

@@ -25,17 +25,16 @@ const getWinner = () => { return WINNER; };
 function playMove(col) {
 	if (!PLAYER_TURN) return;
 	try {
-		playTurn(col);
 		registerMove(getPossibleRow(col), col);
+		playTurn(col);
 	} catch (error) {
 		// console.log("Incorrect move");
 	}
 }
 
 function registerMove(row, col) {
-	const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H"];
-	const moveName = alphabet[col] + "" + row;
-	MOVE_LIST.push(moveName);
+	// const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H"];
+	MOVE_LIST.push([row, col]);
 }
 
 function nextTurn() {
@@ -92,11 +91,19 @@ function getEmoji(state) {
 
 function getGameString() {
 	let gameString = "";
+	let col, row;
+	if (WINNER && MOVE_LIST.length) {
+		[row, col] = MOVE_LIST[MOVE_LIST.length - 1];
+		DISK_LIST[row][col].state = (PLAYER_TURN != "yellow") ? "yellow_won" : "red_won";
+	}
 	for (let i = 0; i < GRID_SIZE; i++) {
 		for (let j = 0; j < GRID_SIZE; j++) {
 			gameString += getEmoji(DISK_LIST[i][j].state);
 		}
 		gameString += "\n\n";
+	}
+	if (WINNER && MOVE_LIST.length) {
+		DISK_LIST[row][col].state = (PLAYER_TURN != "yellow") ? "yellow" : "red";
 	}
 	return gameString;
 }
@@ -258,3 +265,6 @@ module.exports = {
 	newGame,
 	resetGame,
 };
+
+newGame();
+getGameString();
