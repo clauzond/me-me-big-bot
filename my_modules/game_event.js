@@ -92,7 +92,7 @@ function getEmoji(state) {
 function getGameString() {
 	let gameString = "";
 	let col, row;
-	if (WINNER && MOVE_LIST.length) {
+	if (!WINNER && MOVE_LIST.length) {
 		[row, col] = MOVE_LIST[MOVE_LIST.length - 1];
 		DISK_LIST[row][col].state = (PLAYER_TURN != "yellow") ? "yellow_won" : "red_won";
 	}
@@ -102,7 +102,7 @@ function getGameString() {
 		}
 		gameString += "\n\n";
 	}
-	if (WINNER && MOVE_LIST.length) {
+	if (!WINNER && MOVE_LIST.length) {
 		DISK_LIST[row][col].state = (PLAYER_TURN != "yellow") ? "yellow" : "red";
 	}
 	return gameString;
