@@ -27,8 +27,8 @@ const clockLoop = async (message, displayFunction) => {
 	} catch (error) {}
 };
 
-const getTimerString = (writeTime) => {
-	return (writeTime) ? `                          ${clocksEmoji[Math.floor(timer) % 4]} (${timePerTurn - Math.floor(timer)})` : "";
+const getTimerString = (writeTime, repeat = 10) => {
+	return (writeTime) ? `${" ".repeat(repeat)}${clocksEmoji[Math.floor(timer) % 4]} (${timePerTurn - Math.floor(timer)})` : "";
 };
 
 const getNameFromEmoji = (emoji) => {
@@ -43,6 +43,12 @@ const getUserFromName = (name) => {
 	return undefined;
 };
 
+const getRepeat = (left_user, right_user) => {
+	const p = 1.8 * (left_user.username.length + right_user.username.length + (Math.floor(Math.log10(timePerTurn - timer + 1))));
+	const r = 40 - Math.floor(Math.min(40, p));
+	return r;
+};
+
 const getPlayer = () => {
 	const playerTurn = getPlayerTurn();
 	return (playerTurn == "yellow" ? getUserFromName("yellow") : getUserFromName("red"));
@@ -53,11 +59,12 @@ const getEmojiColumn = (emojiName) => {
 };
 
 const getStatusString = (left_emoji, left_user, right_user, right_emoji, writeTime = false, additionalString = "") => {
-	return `${left_emoji}  ${left_user} vs ${right_user}  ${right_emoji}${getTimerString(writeTime)}${additionalString}`;
+	return `${left_emoji}  ${left_user} vs ${right_user}  ${right_emoji}${getTimerString(writeTime, getRepeat(left_user, right_user))}${additionalString}`;
 };
 
 const discordGameString = (showColors = false, timeout = false) => {
 	const winner = getWinner();
+	if (winner || timeout) timer = 0;
 	const left = (getPlayerTurn() == leftColor || showColors) ? leftEmoji : "⚫";
 	const right = (getPlayerTurn() == rightColor || showColors) ? rightEmoji : "⚫";
 	let gameString = "";
@@ -77,7 +84,7 @@ const discordGameString = (showColors = false, timeout = false) => {
 			break;
 		default:
 			if (timeout) {
-				gameString += "⬛  Game has timeout  ⬛\n** **";
+				gameString += `⬛  ${getUserFromName(getPlayerTurn())} has timed out  ⬛\n** **`;
 			} else {
 				gameString += "** **";
 			}
@@ -162,7 +169,7 @@ module.exports = {
 		}
 		gameInProgress = true;
 		timer = 0;
-		timePerTurn = 120;
+		timePerTurn = 60;
 		readyCheckFinished = false;
 		leftUser = interaction.user, rightUser = interaction.options.getUser("user");
 		leftEmoji = "⚫", rightEmoji = "⚫";
@@ -186,7 +193,7 @@ module.exports = {
 		timePerTurn = interaction.options.getInteger("time");
 		newGame();
 		await message.edit(getStatusString(leftEmoji, leftUser, rightUser, rightEmoji)
-		+ `\nGame will soon start.\nEach player has ${timePerTurn} seconds per turn.\nGLHF`).catch(error => {return;});
+		+ `\nGame will soon start.\nEach player gets ${timePerTurn} seconds per turn.\nGLHF`).catch(error => {return;});
 		
 		// collect emotes 
 		let bot_finished = false;
