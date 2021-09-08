@@ -43,7 +43,7 @@ client.on("interactionCreate", async interaction => {
 	if (!command) return;
 
 	// register log
-	log = `${interaction.user.tag} in #${interaction.channel.name} (${interaction.guild.name}) triggered ${interaction.commandName} ${command.emoji}`;
+	log = `[${new Date().toLocaleTimeString()}] ${interaction.user.tag} in #${interaction.channel.name} (${interaction.guild.name}) triggered ${interaction.commandName} ${command.emoji}`;
 	logs.push(log);
 	console.log(log);
 
