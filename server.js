@@ -1,7 +1,9 @@
-const http = require("http");
+// create an express app
+const express = require("express");
+const app = express();
 
-const hostname = "localhost";
-const port = 3000;
+// use the express-static middleware
+app.use(express.static("public"));
 
 const htmlify = (logs) => {
 	let res = "";
@@ -9,16 +11,8 @@ const htmlify = (logs) => {
 	for (const log of logs) {
 		res += `${div} ${log} </div>\n`;
 	}
-	return res;
-};
-
-
-const startServer = (getLogsFunc) => {
-	const server = http.createServer((req, res) => {
-		res.statusCode = 200;
-		res.setHeader("Content-Type", "text/html");
-		res.end(`
-		<!DOCTYPE html>
+	const html =
+		`<!DOCTYPE html>
 		<html>
 		<head>
 			<meta charset="utf-8">
@@ -28,13 +22,21 @@ const startServer = (getLogsFunc) => {
 			<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 		</head>
 		<body class="bg-dark d-flex flex-column align-items-center">
-		${htmlify(getLogsFunc())}
+		${res}
 		</body>
-		</html>`);
+		</html>`;
+	return html;
+};
+
+
+const startServer = (getLogsFunc) => {
+	// define the first route
+	app.get("/", function(req, res) {
+		res.send(htmlify(getLogsFunc()));
 	});
 
-	server.listen(port, hostname, () => {
-		console.log(`Server running at http://${hostname}:${port}/`);
+	app.listen(process.env.PORT || 5000, () => {
+		console.log(`Server running at ${process.env.PORT || 5000}`);
 	});
 };
 
