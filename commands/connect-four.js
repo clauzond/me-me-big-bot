@@ -18,12 +18,12 @@ let timePerTurn = 20;
 const clockLoop = async (message, displayFunction) => {
 	if (!gameInProgress || readyCheckFinished) return;
 	try {
-		timer += 0.8;
+		timer += 2;
 		const t = Date.now();
 		await message.edit(displayFunction());
 		const dt = Date.now() - t;
 		timer += dt / 1000;
-		setTimeout(() => clockLoop(message, displayFunction), 800);
+		setTimeout(() => clockLoop(message, displayFunction), 2000);
 	} catch (error) {}
 };
 
