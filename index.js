@@ -3,6 +3,7 @@ const fs = require("fs");
 const { Client, Collection, Intents } = require("discord.js");
 const { token, allowedChannels, allowedGuilds, arenaChannels, allowedArenaCommands } = require("./config.json");
 const { randomEmoji } = require("./my_modules/random-emoji.js");
+const { startServer } = require("./server.js");
 
 // Create a new client instance
 // list of intents: https://discord.com/developers/docs/topics/gateway#gateway-intents
@@ -27,6 +28,10 @@ client.once("ready", c => {
 	console.log(`ready to operate ${randomEmoji()}`);
 });
 
+// Handle logs (see ./server.js)
+const logs = [];
+const getLogs = () => { return logs; };
+let log = "";
 
 // Replying to commands
 client.on("interactionCreate", async interaction => {
@@ -37,7 +42,10 @@ client.on("interactionCreate", async interaction => {
 	// command doesn't exist in Collection
 	if (!command) return;
 
-	console.log(`${interaction.user.tag} in #${interaction.channel.name} (${interaction.guild.name}) triggered ${interaction.commandName} ${command.emoji}`);
+	// register log
+	log = `${interaction.user.tag} in #${interaction.channel.name} (${interaction.guild.name}) triggered ${interaction.commandName} ${command.emoji}`;
+	logs.push(log);
+	console.log(log);
 
 	// command not in correct guild or not in correct channel
 	if (arenaChannels.includes(interaction.channelId) && !allowedArenaCommands.includes(interaction.commandName)) {
@@ -64,3 +72,6 @@ client.on("interactionCreate", async interaction => {
 
 // Login to Discord with your client's token
 client.login(token);
+
+// Start http
+startServer(getLogs);
