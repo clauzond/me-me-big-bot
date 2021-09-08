@@ -4,6 +4,7 @@ const { Client, Collection, Intents } = require("discord.js");
 const { token, allowedChannels, allowedGuilds, arenaChannels, allowedArenaCommands } = require("./config.json");
 const { randomEmoji } = require("./my_modules/random-emoji.js");
 const { startServer } = require("./server.js");
+const { getLogTime } = require("./my_modules/time.js");
 
 // Create a new client instance
 // list of intents: https://discord.com/developers/docs/topics/gateway#gateway-intents
@@ -43,7 +44,7 @@ client.on("interactionCreate", async interaction => {
 	if (!command) return;
 
 	// register log
-	log = `[${new Date().toLocaleTimeString()}] ${interaction.user.tag} in #${interaction.channel.name} (${interaction.guild.name}) triggered ${interaction.commandName} ${command.emoji}`;
+	log = `[${getLogTime()}] ${interaction.user.tag} in #${interaction.channel.name} (${interaction.guild.name}) triggered ${interaction.commandName} ${command.emoji}`;
 	logs.push(log);
 	console.log(log);
 
