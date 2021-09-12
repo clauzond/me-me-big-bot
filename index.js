@@ -1,7 +1,8 @@
 // Require the necessary discord.js classes
 const fs = require("fs");
 const { Client, Collection, Intents } = require("discord.js");
-const { token, allowedChannels, allowedGuilds, arenaChannels, allowedArenaCommands } = require("./config.json");
+const { allowedChannels, allowedGuilds, arenaChannels, allowedArenaCommands } = require("./config.json");
+const { token } = require("./token.json");
 const { randomEmoji } = require("./my_modules/random-emoji.js");
 const { startServer } = require("./server.js");
 const { getLogTime } = require("./my_modules/time.js");
