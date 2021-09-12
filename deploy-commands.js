@@ -1,16 +1,16 @@
 // Deploy commands' data (name, description, ...) to guild
-
 const fs = require("fs");
 const { REST } = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");
 const { clientId, guildId } = require("./config.json");
-const { token } = require("./token.json");
 
-if (process.env.token) {
-	console.log(process.env.token);
+let token;
+try {
+	token = require("./token.json");
+} catch {
+	console.log(process.env);
+	token = process.env.token;
 }
-console.log("h");
-console.log(process.env);
 
 const commands = [];
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));

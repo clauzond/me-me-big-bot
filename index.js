@@ -2,10 +2,17 @@
 const fs = require("fs");
 const { Client, Collection, Intents } = require("discord.js");
 const { allowedChannels, allowedGuilds, arenaChannels, allowedArenaCommands } = require("./config.json");
-const { token } = require("./token.json");
 const { randomEmoji } = require("./my_modules/random-emoji.js");
 const { startServer } = require("./server.js");
 const { getLogTime } = require("./my_modules/time.js");
+
+let token;
+try {
+	token = require("./token.json");
+} catch {
+	console.log(process.env);
+	token = process.env.token;
+}
 
 // Create a new client instance
 // list of intents: https://discord.com/developers/docs/topics/gateway#gateway-intents
