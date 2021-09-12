@@ -8,7 +8,6 @@ let token;
 try {
 	token = require("./token.json");
 } catch {
-	console.log(process.env);
 	token = process.env.token;
 }
 
