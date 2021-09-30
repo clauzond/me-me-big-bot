@@ -27,8 +27,10 @@ for (const file of commandFiles) {
 	client.commands.set(command.data.name, command);
 }
 
+// TODO: check how permissions work [https://discordjs.guide/interactions/slash-command-permissions.html]
+
 // list of events: https://discord.js.org/#/docs/main/stable/class/Client
-// event-handling guide: https://discordjs.guide/creating-your-bot/event-handling.html#individual-event-files
+// event-handling guide: https://discordjs.guide/creating-your-bot/event-handling.html
 
 // When the client is ready, run this code (only once)
 client.once("ready", c => {
